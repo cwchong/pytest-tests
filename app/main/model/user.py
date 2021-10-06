@@ -1,5 +1,9 @@
 # sqlalchemy model
 from .. import db, flask_bcrypt
+import datetime
+import jwt
+from app.main.model.blacklist import BlacklistToken
+from ..config import key, algo
 
 
 class User(db.Model):
@@ -23,6 +27,31 @@ class User(db.Model):
 
     def check_password(self, password):
         return flask_bcrypt.check_password_hash(self.password_hash, password)
+
+    def encode_auth_token(self, user_id):
+        try:
+            payload = {
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1, seconds=5),
+                'iat': datetime.datetime.utcnow(),
+                'sub': user_id
+            }
+            return jwt.encode(payload, key, algorithm=algo)
+        except Exception as e:
+            return e
+    
+    @staticmethod
+    def decode_auth_token(auth_token):
+        try:
+            payload = jwt.decode(auth_token, key, algorithms=[algo])
+            is_blacklisted_token = BlacklistToken.check_blacklist(auth_token)
+            if is_blacklisted_token:
+                return 'Token logged out, log in again'
+            else:
+                return payload['sub']
+        except jwt.ExpiredSignatureError:
+            return 'Token expired, please log in'
+        except jwt.InvalidTokenError:
+            return 'Token invalid, please log in'
     
     def __repr__(self):
         return "<User '{}'>".format(self.username)
