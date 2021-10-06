@@ -16,17 +16,12 @@ def save_new_user(data):
             registered_on=datetime.datetime.utcnow()
         )
         save_changes(new_user)
-        response_object = {
-            'status': 'success',
-            'message': 'Successfully registered'
-        }
-        return response_object, 201
+        return generate_token(new_user)
     else:
-        response_object = {
+        return {
             'status': 'fail',
             'message': 'User already exists, log in'
-        }
-        return response_object, 409
+        }, 409
     
 
 def get_all_users():
@@ -35,6 +30,21 @@ def get_all_users():
 
 def get_one_user(public_id):
     return User.query.filter_by(public_id=public_id)
+
+
+def generate_token(user):
+    try:
+        auth_token = user.encode_auth_token(user.id)
+        return {
+            'status': 'success',
+            'message': 'successfully registered',
+            'Authorization': auth_token
+        }, 201
+    except Exception as e:
+        return {
+            'status': 'fail',
+            'message': e
+        }, 401
 
 
 def save_changes(data):

@@ -8,8 +8,8 @@ from flask_migrate import Migrate # sqlalchemy migrations using alembic
 from app.main import create_app, db
 from app import blueprint
 
-# for migrations
-from app.main.model import user
+# for migrations when running "flask db migrate"
+from app.main.model import user, blacklist
 
 app = create_app(os.environ.get('BOILERPLATE_ENV') or 'dev')
 app.register_blueprint(blueprint)

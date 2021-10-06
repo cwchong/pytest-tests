@@ -1,7 +1,7 @@
 from flask_restx import Namespace, fields
+'''Data transfer objects for moving data b/w processes'''
 
 
-'''Data transfer object for moving data b/w processes'''
 class UserDto:
     api = Namespace('user', description='user stuff')
     user = api.model('user', {
@@ -10,4 +10,12 @@ class UserDto:
         'password': fields.String(required=True, description='password'),
         'public_id': fields.String(description='user id'),
 
+    })
+
+
+class AuthDto:
+    api = Namespace('auth', description='auth stuff')
+    user_auth = api.model('auth_details', {
+        'email': fields.String(required=True, description='email'),
+        'password': fields.String(required=True, description='password')
     })

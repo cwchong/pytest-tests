@@ -6,6 +6,7 @@ mysql_local = os.environ.get('DATABASE_URL')
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'my_secret_key')
+    ALGO = 'HS256'
     DEBUG = False
     RESTX_MASK_SWAGGER = False
 
@@ -37,3 +38,4 @@ config_by_name = dict(
 )
 
 key = Config.SECRET_KEY
+algo = Config.ALGO

@@ -7,15 +7,6 @@ from app.main.config import basedir
 from app.main import create_app
 
 
-
-
-@pytest.fixture(scope="class")
-def client_test():
-    app = create_app('test')
-    with app.test_client() as client:
-        yield client
-
-
 # some basic testing
 class TestDevelopmentConfig(unittest.TestCase):
     @pytest.fixture(autouse=True)
