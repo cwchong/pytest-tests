@@ -3,6 +3,7 @@ from flask_restx import Resource
 
 from ..util.dto import UserDto
 from ..service.user_service import save_new_user, get_all_users, get_one_user
+from ..util.decorator import token_required, admin_token_required
 
 api = UserDto.api
 _user = UserDto.user
@@ -10,7 +11,8 @@ _user = UserDto.user
 
 @api.route('/')
 class UserList(Resource):
-    @api.doc('list of users')
+    @api.doc('list of users', security='auth')
+    @admin_token_required
     @api.marshal_list_with(_user, envelope='data')
     def get(self):
         '''
@@ -25,6 +27,14 @@ class UserList(Resource):
     def post(self):
         data = request.json
         return save_new_user(data=data)
+
+
+@api.route('/me')
+class MyDetails(Resource):
+    @api.doc('get my own info', security='auth')
+    @token_required
+    def get(self, payload):
+        return payload
 
 
 @api.route('/<public_id>')

@@ -37,9 +37,11 @@ class Auth:
         if auth_token:
             resp = User.decode_auth_token(auth_token)
             print('resp type is', type(resp))
-            if not isinstance(resp, str): # TODO: suss
+            if not isinstance(resp, str):
+                print('saving token')
                 return save_token(token=auth_token)
             else:
+                print('NOT saving token')
                 return {
                     'status': 'fail',
                     'message': resp
@@ -49,3 +51,28 @@ class Auth:
                 'status': 'fail',
                 'message': 'Token is invalid'
             }, 403
+    
+    @staticmethod
+    def get_logged_in_user(new_request):
+        auth_token = new_request.headers.get('Authorization')
+        if auth_token:
+            resp = User.decode_auth_token(auth_token)
+            if not isinstance(resp, str):
+                user = User.query.filter_by(id=resp).first()
+                return {
+                    'status': 'success',
+                    'data': {
+                        'user_id': user.id,
+                        'email': user.email,
+                        'admin': user.admin,
+                        'registered_on': str(user.registered_on)
+                    }
+                }, 200
+            return {
+                'status': 'fail',
+                'message': resp
+            }, 401
+        return {
+            'status': 'fail',
+            'message': 'Please provide valid auth token'
+        }, 401

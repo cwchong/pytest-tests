@@ -38,6 +38,25 @@ def logout_user(self, token):
 
 
 class TestAuth(BaseTestCase):
+    def test_registration(self):
+        user_response = register_user(self)
+        response_data = json.loads(user_response.data.decode())
+        self.assertTrue(response_data['status'] == 'success')
+        self.assertTrue(response_data['message'] == 'successfully registered')
+        self.assertTrue(response_data['Authorization'])
+        self.assertEqual(user_response.status_code, 201)
+
+    
+    def test_registration_with_registered_user(self):
+        register_user(self)
+        # reg again
+        user_response = register_user(self)
+        response_data = json.loads(user_response.data.decode())
+        self.assertTrue(response_data['status'] == 'fail')
+        self.assertTrue(response_data['message'] == 'User already exists, log in')
+        self.assertEqual(user_response.status_code, 409)
+
+
     def test_registered_user_login(self):
         user_response = register_user(self)
         response_data = json.loads(user_response.data.decode())
@@ -50,6 +69,7 @@ class TestAuth(BaseTestCase):
         self.assertTrue(data['Authorization'])
         self.assertEqual(login_response.status_code, 200)
     
+
     def test_valid_logout(self):
         user_response = register_user(self)
         response_data = json.loads(user_response.data.decode())
@@ -67,3 +87,37 @@ class TestAuth(BaseTestCase):
         data = json.loads(logout_response.data.decode())
         self.assertTrue(data['status'] == 'success')
         self.assertEqual(logout_response.status_code, 200)
+
+    
+    def test_login_unregistered(self):
+        login_response = login_user(self)
+        data = json.loads(login_response.data.decode())
+        self.assertTrue(data['status'] == 'fail')
+        self.assertTrue(data['message'] == 'incorrect credentials')
+        self.assertEqual(login_response.status_code, 401)
+    
+
+    def test_logout_blacklisted_token(self):
+        user_response = register_user(self)
+        response_data = json.loads(user_response.data.decode())
+        self.assertTrue(response_data['Authorization'])
+        self.assertEqual(user_response.status_code, 201)
+
+        # login after registration
+        login_response = login_user(self)
+        data = json.loads(login_response.data.decode())
+        self.assertTrue(data['Authorization'])
+        self.assertEqual(login_response.status_code, 200)
+
+        # logout test; token should be blacklisted now
+        logout_response = logout_user(self, data['Authorization'])
+        logout_data = json.loads(logout_response.data.decode())
+        self.assertTrue(logout_data['status'] == 'success')
+        self.assertEqual(logout_response.status_code, 200)
+
+        # logout again with the blacklisted token; status 200 but fail msg
+        relogout_response = logout_user(self, data['Authorization'])
+        relogout_data = json.loads(relogout_response.data.decode())
+        self.assertTrue(relogout_data['status'] == 'fail')
+        self.assertTrue(relogout_data['message'] == 'Token logged out, log in again')
+        self.assertEqual(relogout_response.status_code, 401)
